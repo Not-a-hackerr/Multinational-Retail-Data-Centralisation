@@ -1,5 +1,7 @@
+import tabula
+
 class DataExtractor:
-    pass
-
-
+    def read_rds_engine(self):
+        pass
+    
 
