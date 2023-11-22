@@ -7,7 +7,6 @@ from dateutil.parser import parse
 
 class DataExtractor:
     """
-
     sqlalchemy helps you connect to cloud service, here we are connecting to a aws cloud to read data
     to then clean it and add it to pgadmin
 

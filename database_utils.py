@@ -31,6 +31,3 @@ class DatabaseConnector:
         pass
 
 
-DBC = DatabaseConnector()
-db_dict = DBC.read_db_creds()
-print(DBC.list_db_tables())
