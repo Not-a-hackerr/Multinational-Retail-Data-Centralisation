@@ -2,7 +2,7 @@ import pandas as pd
 import data_extraction as DE
 from dateutil.parser import parse
 import database_utils as DB
-
+import numpy as np
 
 class DataCleaning:
 
@@ -55,7 +55,6 @@ class DataCleaning:
         return user_data
 
 
-
     def clean_card_data(self):
         card_payment_data  = DE.DataExtractor().retrieve_pdf_data()
         card_payment_data = card_payment_data[["card_number", "expiry_date", "card_provider", "date_payment_confirmed"]]
@@ -81,4 +80,4 @@ clean = DataCleaning()
 # card_data
 
 
-# clean.clean_user_data()
+clean.clean_user_data()
