@@ -1,14 +1,14 @@
 import pandas as pd
-import data_extraction as DE
+import data_extraction 
 from dateutil.parser import parse
-import database_utils as DB
+import database_utils 
 import numpy as np
 
 class DataCleaning:
 
     def clean_user_data(self):
-        engine = DB.DatabaseConnector().init_db_engine()
-        user_data = DE.DataExtractor().read_rds_engine("legacy_users", engine)
+        engine = database_utils.DatabaseConnector().init_db_engine()
+        user_data = data_extraction.DataExtractor().read_rds_engine("legacy_users", engine)
         
         # Find and clear Null values in first and last names
         user_data = user_data[~user_data["first_name"].str.contains('null',case=False) | user_data["last_name"].str.contains('null',case=False)]
@@ -48,6 +48,9 @@ class DataCleaning:
         user_data[~user_data["phone_number"].str.match(phone_number_regex, 'phone_number')] = np.nan
         user_data = user_data.dropna()
 
+        # Address 
+        user_data["address"] = user_data["address"].str.replace('\S*\/\S*\s*', '', regex=True)
+
         # Remove extra index column
         user_data.drop("index", axis=1, inplace=True)
         user_data.reset_index(drop=True, inplace=True)
@@ -56,7 +59,7 @@ class DataCleaning:
 
 
     def clean_card_data(self):
-        card_payment_data  = DE.DataExtractor().retrieve_pdf_data()
+        card_payment_data  = data_extraction.DataExtractor().retrieve_pdf_data()
         card_payment_data = card_payment_data[["card_number", "expiry_date", "card_provider", "date_payment_confirmed"]]
 
         # Cleans card number of null values 
@@ -75,9 +78,7 @@ class DataCleaning:
         return card_payment_data
 
 
-clean = DataCleaning()
-# card_data = clean.clean_card_data()
-# card_data
+# clean = DataCleaning()
 
-
-clean.clean_user_data()
+# user_data = clean.clean_user_data()
+# user_data.to_csv("complete_user_data.csv")

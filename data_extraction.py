@@ -4,6 +4,7 @@ import pandas as pd
 import inspect
 from sqlalchemy import text 
 from dateutil.parser import parse
+import numpy as np
 
 class DataExtractor:
     """
@@ -23,8 +24,7 @@ class DataExtractor:
     def retrieve_pdf_data(self):
         pdf_path = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"
         payment = tabula.read_pdf(pdf_path, stream=True, pages="all")
-        payment = pd.concat(dfs)
+        payment = pd.concat(payment)
         return payment
-
 
 
