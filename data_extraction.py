@@ -34,13 +34,18 @@ class DataExtractor:
         return number_of_stores
     
     def retrieve_stores_data(self):
-        response = requests.get(f"https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/{self.list_number_of_stores()}", headers=self.api_header_deats)
-        
-        return response
+        response_list = []
+        for i in range(self.list_number_of_stores()):
+            response = requests.get(f"https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/{i}", headers=self.api_header_deats)
+            response = response.json()
+            response_list.append(response)
+            store_data = pd.DataFrame(response_list)   
+            # store_data.to_csv("store_data.csv")
+        return store_data
 
 
 DE = DataExtractor()
+store_data = DE.retrieve_stores_data()
 
-print(DE.retrieve_stores_data())
-    
+
 
