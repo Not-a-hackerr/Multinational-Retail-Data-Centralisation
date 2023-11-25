@@ -1,12 +1,12 @@
-import database_utils
 import tabula
 import pandas as pd
-import inspect
-from sqlalchemy import text 
-from dateutil.parser import parse
-import numpy as np
+from fastapi import FastAPI
+import requests
+
 
 class DataExtractor:
+    def __init__(self):
+        self.api_header_deats = {"x-api-key":"yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX"}
     """
     sqlalchemy helps you connect to cloud service, here we are connecting to a aws cloud to read data
     to then clean it and add it to pgadmin
@@ -27,4 +27,20 @@ class DataExtractor:
         payment = pd.concat(payment)
         return payment
 
+    def list_number_of_stores(self):
+        response = requests.get("https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores",headers=self.api_header_deats)
+        response = response.json()
+        number_of_stores = response["number_stores"]
+        return number_of_stores
+    
+    def retrieve_stores_data(self):
+        response = requests.get(f"https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/{self.list_number_of_stores()}", headers=self.api_header_deats)
+        
+        return response
+
+
+DE = DataExtractor()
+
+print(DE.retrieve_stores_data())
+    
 
