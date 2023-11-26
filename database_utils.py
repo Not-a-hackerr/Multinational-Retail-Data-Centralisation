@@ -4,13 +4,14 @@ from sqlalchemy import create_engine
 from sqlalchemy import inspect
 import psycopg2
 
+
 class DatabaseConnector:
     def read_db_creds(self):
         with open('db_creds.yaml') as f:
             data_base_creds = yaml.load(f, Loader=yaml.FullLoader)
         return data_base_creds
     
-    # Reads credentials from read_db_creds dictionay
+    # Reads credentials from read_db_creds dictiona
     def init_db_engine(self):
         db_creds_dict = self.read_db_creds()
         engine = create_engine(f"postgresql://{db_creds_dict['RDS_USER']}:{db_creds_dict['RDS_PASSWORD']}@{db_creds_dict['RDS_HOST']}:{db_creds_dict['RDS_PORT']}/{db_creds_dict['RDS_DATABASE']}")
@@ -33,5 +34,17 @@ class DatabaseConnector:
         panda_df.to_sql(f'{table_name}', con=db_engine, if_exists='replace', index=False)
 
 
+    # def 
+
+DC = DatabaseConnector()
+
 if __name__ == '__main__':
     pass
+
+
+print(DC.list_db_tables()[2])
+
+
+
+
+
