@@ -20,13 +20,8 @@ class DataExtractor:
     """
     def read_rds_engine(self, table_name, engine):
         with engine as connection:
-            users = pd.read_sql_table(f"{table_name}", engine)
-        return users
-    
-    def read_rds_table(self, table_name, engine):
-        with engine as connection:
-            orders = pd.read_sql_table(f"{table_name}", engine)
-        return orders
+            data = pd.read_sql_table(f"{table_name}", engine)
+        return data
     
     def retrieve_pdf_data(self):
         pdf_path = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"

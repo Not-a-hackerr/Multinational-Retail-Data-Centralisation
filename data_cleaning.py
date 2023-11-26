@@ -4,9 +4,30 @@ from dateutil.parser import parse
 import database_utils 
 import numpy as np
 import data_extraction
+import database_utils
 import re
 
 class DataCleaning:
+
+    def clean_orders_data(self):
+        orders_engine = database_utils.DatabaseConnector().init_db_engine()
+        orders_data = data_extraction.DataExtractor().read_rds_engine(f"{database_utils.DatabaseConnector().list_db_tables()[2]}", orders_engine)
+        
+        # Remove NULL columns 
+        orders_data = orders_data.drop("first_name", axis=1)
+        orders_data = orders_data.drop("last_name", axis=1)
+        orders_data = orders_data.drop("1", axis=1)
+        orders_data.dropna(inplace=True)
+        
+        # Card Number
+        orders_data["card_number"] = orders_data["card_number"].astype("int64")
+
+        # Index 
+        orders_data.drop("level_0", axis=1, inplace= True)
+        orders_data.drop("index", axis=1, inplace=True)
+        orders_data.reset_index(drop=True)
+
+        return orders_data
 
     def clean_user_data(self):
         engine = database_utils.DatabaseConnector().init_db_engine()
@@ -135,7 +156,7 @@ class DataCleaning:
             # Remove 'kg' and convert to float
             return float(weight_str.replace('kg', ''))
     
-    
+
     def clean_product_data(self):
         product_data = data_extraction.DataExtractor().extract_from_s3("s3://data-handling-public/products.csv")
         product_data = product_data.dropna()
@@ -171,8 +192,9 @@ class DataCleaning:
 
 clean = DataCleaning()
 
-clean.clean_product_data()
+# clean.clean_orders_data().info()
 
+# clean.clean_orders_data()
 
 
 
