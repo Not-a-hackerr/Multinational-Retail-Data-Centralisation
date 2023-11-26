@@ -54,10 +54,8 @@ class DataExtractor:
         df = pd.read_csv(data_io)
         return df 
 
-        
-
-
-
-# DE = DataExtractor()
-
+    def retrieve_date_events_data(self):
+        json_path = "https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json"
+        date_events = pd.read_json(json_path)
+        return date_events
 

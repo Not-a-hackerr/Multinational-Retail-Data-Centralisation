@@ -29,6 +29,7 @@ class DataCleaning:
 
         return orders_data
 
+
     def clean_user_data(self):
         engine = database_utils.DatabaseConnector().init_db_engine()
         user_data = data_extraction.DataExtractor().read_rds_engine("legacy_users", engine)
@@ -172,7 +173,6 @@ class DataCleaning:
         product_data.dropna()
         product_data["EAN"] = product_data["EAN"].astype('int64')
 
-
         # Weight transfer
         product_data["weight"] = product_data["weight"].apply(self.convert_product_weights)
 
@@ -189,16 +189,21 @@ class DataCleaning:
         product_data.reset_index(drop=True, inplace=True)
 
         return product_data
+    
 
-clean = DataCleaning()
+    def clean_date_events(self):
+        date_events = data_extraction.DataExtractor().retrieve_date_events_data()
+        date_events = date_events.dropna()
 
-# clean.clean_orders_data().info()
+        # Time period cleaning
+        date_events = date_events[date_events["time_period"].str.contains("Evening|Midday|Morning|Late_Hours")]
 
-# clean.clean_orders_data()
+        # Combine columns and make a date time object
+        date_events["date_time"] = date_events[["year","month","day","timestamp"]].agg('-'.join,axis=1)
+        date_events = date_events.drop(["year","month","day","timestamp"], axis=1)
+        date_events["date_time"] = pd.to_datetime(date_events["date_time"])
 
+        date_events.reset_index(drop=True, inplace=True)
 
-
-
-
-
+        return date_events
 

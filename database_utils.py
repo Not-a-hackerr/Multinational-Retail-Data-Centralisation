@@ -1,5 +1,4 @@
 import yaml
-import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy import inspect
 import psycopg2
@@ -32,19 +31,4 @@ class DatabaseConnector:
         db_engine = db_engine.connect()
 
         panda_df.to_sql(f'{table_name}', con=db_engine, if_exists='replace', index=False)
-
-
-    # def 
-
-DC = DatabaseConnector()
-
-if __name__ == '__main__':
-    pass
-
-
-print(DC.list_db_tables()[2])
-
-
-
-
 
