@@ -1,6 +1,6 @@
-import tabula
 import pandas as pd
 import requests
+import tabula
 import boto3
 from io import StringIO
 
@@ -25,7 +25,10 @@ class DataExtractor:
     
     def retrieve_pdf_data(self):
         pdf_path = "https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf"
-        payment = tabula.read_pdf(pdf_path, stream=True, pages="all")
+        payment = tabula.read_pdf(pdf_path, stream=False, pages="all")
+        '''
+        Stream = False means when tabula reads the data it assumes there are lines on the pdf and reads the pdf much faster
+        '''
         payment = pd.concat(payment)
         return payment
 

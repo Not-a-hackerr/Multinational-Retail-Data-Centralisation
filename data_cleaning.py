@@ -1,11 +1,10 @@
-import pandas as pd
 import data_extraction 
-from dateutil.parser import parse
-import database_utils 
-import numpy as np
-import data_extraction
 import database_utils
+import numpy as np
+import pandas as pd
 import re
+from dateutil.parser import parse
+
 
 class DataCleaning:
 
@@ -20,7 +19,9 @@ class DataCleaning:
         orders_data.dropna(inplace=True)
         
         # Card Number
-        orders_data["card_number"] = orders_data["card_number"].astype("int64")
+        orders_data["card_number"] = orders_data["card_number"].astype("str")
+
+
 
         # Index 
         orders_data.drop("level_0", axis=1, inplace= True)
@@ -28,125 +29,13 @@ class DataCleaning:
         orders_data.reset_index(drop=True)
 
         return orders_data
-
-
-    def clean_user_data(self):
-        engine = database_utils.DatabaseConnector().init_db_engine()
-        user_data = data_extraction.DataExtractor().read_rds_engine("legacy_users", engine)
-        
-        # Find and clear Null values in first and last names
-        user_data = user_data[~user_data["first_name"].str.contains('null',case=False) | user_data["last_name"].str.contains('null',case=False)]
-
-        # Checking and cleaning country for out of place values
-        """ 
-        user_data["country"].value_counts(), Gives the sum on each unique item in the column
-        The below code only includes data entries with United Kingdom OR Germany ORUnited States in the column
-        """
-        user_data = user_data[user_data["country"].str.contains('United Kingdom|Germany|United States')]
-
-        # Cleaning country code
-        # user_data["country_code"].unique()
-        user_data["country_code"].replace({'GGB' : 'GB' }, inplace=True)
-
-        # Checking of DOB and join_date
-        user_data["date_of_birth"] = user_data["date_of_birth"].apply(parse)
-        user_data["date_of_birth"] = pd.to_datetime(user_data["date_of_birth"], infer_datetime_format=True, errors='coerce')
-
-        user_data["join_date"] = user_data["join_date"].apply(parse)
-        user_data["join_date"] = pd.to_datetime(user_data["join_date"], infer_datetime_format=True, errors='coerce')
-
-        # Email address
-        email_regular_expression = '^.+@[^\.].*\.[a-z]{2,}$'
-        user_data[~user_data["email_address"].str.match(email_regular_expression, 'email_address')] = np.nan 
-        user_data = user_data.dropna()
-        
-        # Phone Number cleaning
-        """
-        For every row  where the Phone column does not match our regular expression, replace the value with NaN
-        (user_data["email_address"].eq('nae')).sum()
-        """
-        user_data["phone_number"] = user_data["phone_number"].str.replace('x.*$', '', regex=True)
-        phone_number_regex = "^(\(?\+?[0-9]*\)?)?[0-9_\- \(\)]*$"
-        user_data[~user_data["phone_number"].str.match(phone_number_regex, 'phone_number')] = np.nan
-        user_data = user_data.dropna()
-
-        # Address 
-        # user_data["address"] = user_data["address"].str.replace('\S*\/\S*\s*', '', regex=True)
-
-        # Remove extra index column
-        user_data.drop("index", axis=1, inplace=True)
-        user_data.reset_index(drop=True, inplace=True)
-
-        return user_data
-
-
-    def clean_card_data(self):
-        card_payment_data  = data_extraction.DataExtractor().retrieve_pdf_data()
-        card_payment_data = card_payment_data[["card_number", "expiry_date", "card_provider", "date_payment_confirmed"]]
-
-        # Cleans card number of null values 
-        card_payment_data.card_number = pd.to_numeric(card_payment_data.card_number, errors='coerce')
-        card_payment_data = card_payment_data.dropna()
-        card_payment_data.card_number = card_payment_data.card_number.astype('int64')
-
-        # Cleans and convert date_payment_confirmed
-        card_payment_data["date_payment_confirmed"] = card_payment_data["date_payment_confirmed"].apply(parse)
-        card_payment_data["date_payment_confirmed"] = pd.to_datetime(card_payment_data["date_payment_confirmed"], infer_datetime_format=True, errors='coerce')
-
-        # Corrects the index column
-        card_payment_data = card_payment_data.reset_index()
-        card_payment_data = card_payment_data.drop("index" ,axis=1)
-
-        return card_payment_data
-
-
-    def clean_store_data(self):
-        # store_data = data_extraction.DataExtractor().retrieve_stores_data()
-        store_data = pd.read_csv("store_data.csv")
-        store_data = store_data.drop("lat", axis=1)
-        store_data = store_data.dropna()
-
-        # cleans Staff numbers
-        store_data["staff_numbers"] = pd.to_numeric(store_data["staff_numbers"], errors='coerce')
-        store_data = store_data.dropna()
-        store_data["staff_numbers"] = store_data["staff_numbers"].astype('int64')
-
-        # Opening date
-        store_data["opening_date"] = store_data["opening_date"].apply(parse)
-        store_data["opening_date"] = pd.to_datetime(store_data["opening_date"], infer_datetime_format=True, errors='coerce')
-
-        # Store type
-        store_data["store_type"].unique()
-
-        # Country code
-        store_data["country_code"].unique()
-
-        # Continent
-        store_data["continent"].value_counts()
-        store_data["continent"] = store_data["continent"].replace({"eeEurope": "Europe", "eeAmerica":"America"}) 
-
-        # Latitude & Longitude
-        store_data["longitude"] = pd.to_numeric(store_data["longitude"], errors='coerce')
-        store_data["latitude"] = pd.to_numeric(store_data["latitude"], errors='coerce')
-
-        # Store code
-        store_code_regex = r'^[A-Z]{2}-[A-Z0-9]{8}$'
-        store_data[~store_data["store_code"].str.match(store_code_regex)] = np.nan
-        # user_data[~user_data["phone_number"].str.match(phone_number_regex, 'phone_number')] = np.nan
-
-        # Resetting the index
-        store_data.drop("index", axis=1, inplace=True)
-        store_data.drop("Unnamed: 0", axis=1, inplace=True)
-        store_data.reset_index(inplace=True, drop=True)
-
-        return store_data
     
 
     def convert_product_weights (self, weight_str):
-        match = re.match(r'([\d.]+)\s*([a-zA-Z]+)', weight_str)
+        regex_match = re.match(r'([\d.]+)\s*([a-zA-Z]+)', weight_str)
         
-        if match:
-            value, unit = match.groups()
+        if regex_match:
+            value, unit = regex_match.groups()
 
             # Convert ml and g to kg
             if unit.lower() == 'ml' or unit.lower() == 'g':
@@ -198,12 +87,91 @@ class DataCleaning:
         # Time period cleaning
         date_events = date_events[date_events["time_period"].str.contains("Evening|Midday|Morning|Late_Hours")]
 
-        # Combine columns and make a date time object
-        date_events["date_time"] = date_events[["year","month","day","timestamp"]].agg('-'.join,axis=1)
-        date_events = date_events.drop(["year","month","day","timestamp"], axis=1)
-        date_events["date_time"] = pd.to_datetime(date_events["date_time"])
 
         date_events.reset_index(drop=True, inplace=True)
 
         return date_events
+
+    def clean_card_data(self):
+        card_payment_data = data_extraction.DataExtractor().retrieve_pdf_data()
+        card_payment_data = card_payment_data[["card_number", "expiry_date", "card_provider", "date_payment_confirmed"]]
+
+        # # Cleans card number of null values 
+        card_payment_data.card_number = card_payment_data.card_number.astype('str')
+        card_payment_data["card_number"] = card_payment_data["card_number"].str.replace('?','')
+        card_payment_data = card_payment_data[card_payment_data["card_number"].str.isnumeric()]
+      
+        # Cleans and convert date_payment_confirmed
+        card_payment_data["date_payment_confirmed"] = card_payment_data["date_payment_confirmed"].apply(parse)
+        card_payment_data["date_payment_confirmed"] = pd.to_datetime(card_payment_data["date_payment_confirmed"], infer_datetime_format=True, errors='coerce')
+
+        # Corrects the index column
+        card_payment_data = card_payment_data.reset_index(drop=True)
+
+        return card_payment_data
+    
+
+    def clean_store_data(self):
+        # store_data = data_extraction.DataExtractor().retrieve_stores_data()
+        store_data = pd.read_csv("store_data.csv")
+
+        store_data = store_data.drop("lat", axis=1)
+
+        # store_type
+        '''
+        Cleaning a column which has a few distinct values first is the best and easiest to clear
+        other rows with errors
+        '''
+        store_data["store_type"].unique()
+        valid_values = ['Web Portal', 'Local', 'Super Store', 'Mall Kiosk', 'Outlet']
+        store_data = store_data[store_data["store_type"].isin(valid_values)]
+
+        # cleans Staff numbers
+        store_data["staff_numbers"] = store_data["staff_numbers"].str.replace(r'\D', '', regex=True)
+
+        # Continent
+        store_data["continent"].value_counts()
+        store_data["continent"] = store_data["continent"].replace({"eeEurope": "Europe", "eeAmerica":"America"}) 
+
+        # Opening_date
+        store_data["opening_date"] = store_data["opening_date"].apply(parse)
+        store_data["opening_date"] = pd.to_datetime(store_data["opening_date"], infer_datetime_format=True, errors='coerce')
+        
+        # # Resetting the index
+        store_data.drop("index", axis=1, inplace=True)
+        store_data.drop("Unnamed: 0", axis=1, inplace=True)
+        store_data.reset_index(inplace=True, drop=True)
+
+        return store_data
+    
+    def clean_user_data(self):
+        engine = database_utils.DatabaseConnector().init_db_engine()
+        user_data = data_extraction.DataExtractor().read_rds_engine("legacy_users", engine)
+        
+        # Find and clear Null values in first and last names
+        user_data = user_data[~user_data["first_name"].str.contains('null',case=False) | user_data["last_name"].str.contains('null',case=False)]
+
+        # Checking and cleaning country for out of place values
+        """ 
+        user_data["country"].value_counts(), Gives the sum on each unique item in the column
+        The below code only includes data entries with United Kingdom OR Germany ORUnited States in the column
+        """
+        user_data = user_data[user_data["country"].str.contains('United Kingdom|Germany|United States')]
+
+        # Cleaning country code
+        # user_data["country_code"].unique()
+        user_data["country_code"].replace({'GGB' : 'GB' }, inplace=True)
+
+        # Checking of DOB and join_date
+        user_data["date_of_birth"] = user_data["date_of_birth"].apply(parse)
+        user_data["date_of_birth"] = pd.to_datetime(user_data["date_of_birth"], infer_datetime_format=True, errors='coerce')
+
+        user_data["join_date"] = user_data["join_date"].apply(parse)
+        user_data["join_date"] = pd.to_datetime(user_data["join_date"], infer_datetime_format=True, errors='coerce')
+
+        # Remove extra index column
+        user_data.drop("index", axis=1, inplace=True)
+        user_data.reset_index(drop=True, inplace=True)
+
+        return user_data
 

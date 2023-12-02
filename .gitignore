@@ -1,4 +1,7 @@
+.gitignore
 db_creds.yaml
-users_data.csv
+user_data.csv
 product_data.csv
 store_data.csv
+card_payment_data.csv
+cleaning_data_test.ipynb
