@@ -1,6 +1,5 @@
 -- TASK 9 How quickly is the company making sales?
 
-
  WITH number_of_orders_by_year AS (
     SELECT
         year,
@@ -33,21 +32,23 @@ seconds AS(
 	FROM
 		number_of_orders_by_year,
 		minutes
-)
-milliseconds AS( 
-	SELECT
-		number_of_orders_by_year.year,
-		60 * (seconds.the_seconds - FLOOR(seconds.the_seconds)) AS the_milliseconds
-	FROM
-		number_of_orders_by_year,
-		seconds
-)
+),
+-- milliseconds AS( 
+-- 	SELECT
+-- 		number_of_orders_by_year.year,
+-- 		1000 * (seconds.the_seconds - FLOOR(seconds.the_seconds)) AS the_milliseconds
+-- 	FROM
+-- 		number_of_orders_by_year,
+-- 		seconds
+-- )
 
 
 SELECT 
     number_of_orders_by_year.year,
-    FLOOR(the_hours),
-	FLOOR(the_minutes)
+    FLOOR(the_hours) AS hours,
+	FLOOR(the_minutes) AS minutes,
+	FLOOR(the_seconds) AS seconds
+	
 FROM 
     number_of_orders_by_year
 JOIN
@@ -56,5 +57,6 @@ JOIN
 	minutes ON number_of_orders_by_year.year = minutes.year
 JOIN
 	seconds ON number_of_orders_by_year.year = seconds.year
-JOIN
-	milliseconds ON number_of_orders_by_year.year = milliseconds.year;
+-- JOIN
+-- 	milliseconds ON number_of_orders_by_year.year = milliseconds.year;
+

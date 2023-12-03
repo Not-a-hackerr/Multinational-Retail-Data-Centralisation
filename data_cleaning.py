@@ -1,6 +1,5 @@
 import data_extraction 
 import database_utils
-import numpy as np
 import pandas as pd
 import re
 from dateutil.parser import parse
