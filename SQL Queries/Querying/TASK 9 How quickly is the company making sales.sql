@@ -1,62 +1,52 @@
 -- TASK 9 How quickly is the company making sales?
 
- WITH number_of_orders_by_year AS (
+WITH date_time AS(
+SELECT
+	year,
+    (year || '-' || LPAD(month::text, 2, '0') || '-' || LPAD(day::text, 2, '0') || ' ' || timestamp)::timestamp AS full_datetime
+FROM 
+    dim_date_times
+),
+
+next_datetime AS (
     SELECT
+		year,
+        full_datetime,
+        LEAD(full_datetime) OVER (ORDER BY full_datetime ASC) AS next_date_time
+    FROM
+        date_time
+),
+time_difference_seconds AS (
+    SELECT
+		year,
+        ABS(EXTRACT(EPOCH FROM (next_date_time - full_datetime))) AS time_difference
+    FROM
+        next_datetime
+),
+average_time_in_seconds AS (
+    SELECT 
         year,
-        COUNT(timestamp) AS number_of_orders
+        AVG(time_difference) AS time
     FROM 
-        dim_date_times
+        time_difference_seconds
     GROUP BY 
         year
-
-),
-hours AS (
-	SELECT 
-		number_of_orders_by_year.year,
-		8.760e+3 / number_of_orders AS the_hours
-	FROM 
-	 number_of_orders_by_year
-	),
-minutes AS( 
-	SELECT
-		number_of_orders_by_year.year,
-		60 * ( hours.the_hours - FLOOR(hours.the_hours)) AS the_minutes
-	FROM
-		number_of_orders_by_year,
-		hours
-),
-seconds AS( 
-	SELECT
-		number_of_orders_by_year.year,
-		60 * (minutes.the_minutes - FLOOR(minutes.the_minutes)) AS the_seconds
-	FROM
-		number_of_orders_by_year,
-		minutes
-),
--- milliseconds AS( 
--- 	SELECT
--- 		number_of_orders_by_year.year,
--- 		1000 * (seconds.the_seconds - FLOOR(seconds.the_seconds)) AS the_milliseconds
--- 	FROM
--- 		number_of_orders_by_year,
--- 		seconds
--- )
+	ORDER BY
+		time DESC
+)
 
 
 SELECT 
-    number_of_orders_by_year.year,
-    FLOOR(the_hours) AS hours,
-	FLOOR(the_minutes) AS minutes,
-	FLOOR(the_seconds) AS seconds
-	
+	year,
+	CONCAT('Hours: ', FLOOR(average_time_in_seconds.time / 3600), ', ' ,' Minutes: ', FLOOR(MOD(average_time_in_seconds.time, 3600)/60), 
+		   ', ', ' Seconds: ', FLOOR(MOD(average_time_in_seconds.time, 60)) , ', ', 'Milliseconds: ', FLOOR(MOD(average_time_in_seconds.time, 1000))
+	)
 FROM 
-    number_of_orders_by_year
-JOIN
-    hours ON number_of_orders_by_year.year = hours.year
-JOIN
-	minutes ON number_of_orders_by_year.year = minutes.year
-JOIN
-	seconds ON number_of_orders_by_year.year = seconds.year
--- JOIN
--- 	milliseconds ON number_of_orders_by_year.year = milliseconds.year;
+	average_time_in_seconds
+LIMIT
+	10
+		
+		
+
+
 
