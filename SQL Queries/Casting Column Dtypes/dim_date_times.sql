@@ -21,5 +21,9 @@ ALTER TABLE dim_date_times
 	ALTER COLUMN date_uuid TYPE UUID
 	USING CAST(date_uuid AS UUID);
 
+ALTER TABLE dim_date_times
+	ALTER COLUMN timestamp TYPE TIME
+	 USING "timestamp"::time without time zone;
+
 SELECT * FROM dim_date_times
 
